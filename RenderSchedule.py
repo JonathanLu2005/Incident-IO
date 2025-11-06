@@ -1,6 +1,7 @@
 import argparse
 import json
 from datetime import datetime
+from OncallSchedule import GenerateBaseSchedule
 import sys
 
 def ParseDate(Date):
@@ -45,12 +46,9 @@ def Main():
     with open(Args.overrides) as f:
         OverridesData = json.load(f)
 
-    print(json.dumps({
-        "schedule": ScheduleData,
-        "overrides": OverridesData,
-        "from_time": FromTime.isoformat(),
-        "until_time": UntilTime.isoformat(),
-    }, indent=2))
+    StartTime = ParseDate(ScheduleData["handover_start_at"])
+    BaseSchedule = GenerateBaseSchedule(ScheduleData, FromTime, UntilTime, StartTime)
+    print(json.dumps(BaseSchedule, indent=2))
 
 if __name__ == "__main__":
     Main()
