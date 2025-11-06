@@ -1,26 +1,8 @@
 import argparse
 import json
-from datetime import datetime
 from OncallSchedule import GenerateBaseSchedule
-import sys
-
-def ParseDate(Date):
-    """ Convert dates from CLI into Python's datetime
-    
-    Arguments:
-    - Date (str): Date received from CLI
-
-    Returns:
-    - datetime: Date in Python's datetime format
-    """
-    if Date.endswith("Z"):
-        Date = Date[:-1] + "+00:00"
-
-    try:
-        return datetime.fromisoformat(Date)
-    except ValueError:
-        print(f"Invalid Date Time: {Date}", file=sys.stderr)
-        sys.exit(1)
+from OverrideSchedule import GenerateOverrides
+from ParseDate import ParseDate
 
 def Main():
     """ Parse CLI input and read JSON files into an object
@@ -48,7 +30,8 @@ def Main():
 
     StartTime = ParseDate(ScheduleData["handover_start_at"])
     BaseSchedule = GenerateBaseSchedule(ScheduleData, FromTime, UntilTime, StartTime)
-    print(json.dumps(BaseSchedule, indent=2))
+    Overrides = GenerateOverrides(OverridesData, FromTime, UntilTime)
+    print(Overrides)
 
 if __name__ == "__main__":
     Main()
