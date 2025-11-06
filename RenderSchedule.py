@@ -1,7 +1,7 @@
 import argparse
 import json
 from OncallSchedule import GenerateBaseSchedule
-from OverrideSchedule import GenerateOverrides
+from OverrideSchedule import GenerateOverrides, InsertOverrides
 from ParseDate import ParseDate
 
 def Main():
@@ -31,7 +31,8 @@ def Main():
     StartTime = ParseDate(ScheduleData["handover_start_at"])
     BaseSchedule = GenerateBaseSchedule(ScheduleData, FromTime, UntilTime, StartTime)
     Overrides = GenerateOverrides(OverridesData, FromTime, UntilTime)
-    print(Overrides)
-
+    FinalSchedule = InsertOverrides(BaseSchedule, Overrides)
+    print(FinalSchedule)
+    
 if __name__ == "__main__":
     Main()
