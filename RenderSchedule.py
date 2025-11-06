@@ -4,6 +4,24 @@ from OncallSchedule import GenerateBaseSchedule
 from OverrideSchedule import GenerateOverrides, InsertOverrides
 from ParseDate import ParseDate
 
+def FormatScheduleForOutput(FinalSchedule):
+    """ Converts the schedule into its requested JSON format
+    
+    Arguments:
+    - FinalSchedule (list[dict]): Schedule with overrides included
+
+    Returns:
+    - Formatted (list[dict]): Schedule in JSON format
+    """
+    Formatted = []
+    for Entry in FinalSchedule:
+        Formatted.append({
+            "user": Entry["User"],
+            "start_at": Entry["StartAt"].replace("+00:00", "Z"),
+            "end_at": Entry["EndAt"].replace("+00:00", "Z")
+        })
+    return Formatted
+
 def Main():
     """ Parse CLI input and read JSON files into an object
     
@@ -32,7 +50,8 @@ def Main():
     BaseSchedule = GenerateBaseSchedule(ScheduleData, FromTime, UntilTime, StartTime)
     Overrides = GenerateOverrides(OverridesData, FromTime, UntilTime)
     FinalSchedule = InsertOverrides(BaseSchedule, Overrides)
-    print(FinalSchedule)
-    
+    Result = FormatScheduleForOutput(FinalSchedule)
+    print(json.dumps(Result, indent=2))
+
 if __name__ == "__main__":
     Main()
