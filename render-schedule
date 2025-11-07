@@ -5,6 +5,7 @@ import json
 from OncallSchedule import GenerateBaseSchedule
 from OverrideSchedule import GenerateOverrides, InsertOverrides
 from ParseDate import ParseDate
+import sys
 
 def FormatScheduleForOutput(FinalSchedule):
     """ Converts the schedule into its requested JSON format
@@ -24,6 +25,59 @@ def FormatScheduleForOutput(FinalSchedule):
         })
     return Formatted
 
+def ValidateInput(SchedulePath, OverridesPath, FromStr, UntilStr):
+    """ Validate user input (CLI arguments and JSON file integrity)
+    
+    Arguments:
+    - SchedulePath (str): Path to the schedule JSON file
+    - OverridesPath (str): Path to the overrides JSON file
+    - FromStr (str): ISO 8601 formatted start time string (e.g. '2025-11-07T17:00:00Z')
+    - UntilStr (str): ISO 8601 formatted end time string (e.g. '2025-11-21T17:00:00Z')
+    
+    Returns:
+    - Tuple: (ScheduleData, OverridesData, FromTime, UntilTime)
+      - ScheduleData (dict): Loaded and validated schedule JSON
+      - OverridesData (list[dict]): Loaded and validated overrides JSON
+      - FromTime (datetime): Parsed start datetime
+      - UntilTime (datetime): Parsed end datetime
+    """
+    try:
+        FromTime = ParseDate(FromStr)
+        UntilTime = ParseDate(UntilStr)
+
+        if FromTime >= UntilTime:
+            print("Error: '--from' time must be before '--until' time.")
+            sys.exit(1)
+    except Exception:
+        print("Error: Invalid date format for --from or --until. Expected ISO 8601 (e.g., 2025-11-07T17:00:00Z).")
+        sys.exit(1)
+
+    try:
+        with open(SchedulePath) as f:
+            ScheduleData = json.load(f)
+    except Exception:
+        print(f"Error: Failed to read schedule file '{SchedulePath}'. Ensure it's valid JSON and accessible.")
+        sys.exit(1)
+
+    try:
+        with open(OverridesPath) as f:
+            OverridesData = json.load(f)
+    except Exception:
+        print(f"Error: Failed to read overrides file '{OverridesPath}'. Ensure it's valid JSON and accessible.")
+        sys.exit(1)
+
+    RequiredScheduleKeys = {"users", "handover_start_at", "handover_interval_days"}
+    if not RequiredScheduleKeys.issubset(ScheduleData.keys()):
+        print("Error: Schedule JSON missing required fields. Must include 'users', 'handover_start_at', and 'handover_interval_days'.")
+        sys.exit(1)
+
+    for i, Override in enumerate(OverridesData):
+        if not all(k in Override for k in ("user", "start_at", "end_at")):
+            print(f"Error: Override {i + 1} missing required keys ('user', 'start_at', 'end_at').")
+            sys.exit(1)
+
+    return ScheduleData, OverridesData, FromTime, UntilTime
+
 def Main():
     """ Parse CLI input and read JSON files into an object
     
@@ -40,13 +94,9 @@ def Main():
     Reader.add_argument("--until", dest="until_time", required=True)
     Args = Reader.parse_args()
 
-    FromTime = ParseDate(Args.from_time)
-    UntilTime = ParseDate(Args.until_time)
-
-    with open(Args.schedule) as f:
-        ScheduleData = json.load(f)
-    with open(Args.overrides) as f:
-        OverridesData = json.load(f)
+    ScheduleData, OverridesData, FromTime, UntilTime = ValidateInput(
+        Args.schedule, Args.overrides, Args.from_time, Args.until_time
+    )
 
     StartTime = ParseDate(ScheduleData["handover_start_at"])
     BaseSchedule = GenerateBaseSchedule(ScheduleData, FromTime, UntilTime, StartTime)

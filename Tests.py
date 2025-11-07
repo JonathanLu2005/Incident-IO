@@ -29,7 +29,11 @@ def RunTest(TestFolder):
         "--until", UntilTime
     ]
 
-    Result = subprocess.run(Cmd, capture_output=True, text=True, check=True)
+    try:
+        Result = subprocess.run(Cmd, capture_output=True, text=True, check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        return False
 
 def Main():
     """ Run all tests and prints result
