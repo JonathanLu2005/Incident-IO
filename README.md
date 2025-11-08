@@ -2,8 +2,6 @@
 
 This is my solution to the provided take-home assessment.
 
-**Video Walkthrough:** [https://youtu.be/3KUJEluZp6o](https://youtu.be/3KUJEluZp6o)
-
 ---
 
 ## Setup Instructions
@@ -57,3 +55,9 @@ You can automatically run all tests with:
 ```bash
 python Tests.py
 ```
+
+---
+
+## Notes
+
+**Video Walkthrough:** [https://youtu.be/3KUJEluZp6o](https://youtu.be/3KUJEluZp6o)
